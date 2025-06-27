@@ -15,7 +15,7 @@ Just as clouds gather, rain falls, and streams fill the mystic lake, so does Nic
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
 [![Security](https://img.shields.io/badge/Security-Bandit-yellow?style=for-the-badge&logo=python)](https://bandit.readthedocs.io/)
 
-A next-gen, cybermantic hallucination detector for LLMs, inspired by the hydrological cycle and designed for both clarity and mystery.
+Nicotine is a creative software project aimed at incorporating natural patterns into the process of detecting hallucinations in large-language models.
 
 [Getting Started](#getting-started) •
 [Features](#features) •
