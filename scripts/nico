@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Directory where your CLI scripts live
+CLI_DIR="$(dirname "$0")/cli"
+
+if [ $# -eq 0 ]; then
+    echo "Usage: nico <command> [args]"
+    echo "Available commands:"
+    ls "$CLI_DIR" | grep '.sh$' | sed 's/\.sh$//'
+    exit 1
+fi
+
+COMMAND="$1"
+shift
+
+SCRIPT="$CLI_DIR/$COMMAND.sh"
+
+if [ -x "$SCRIPT" ]; then
+    exec "$SCRIPT" "$@"
+else
+    echo "Unknown command: $COMMAND"
+    echo "Available commands:"
+    ls "$CLI_DIR" | grep '.sh$' | sed 's/\.sh$//'
+    exit 2
+fi
