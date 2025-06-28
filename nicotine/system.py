@@ -79,6 +79,13 @@ def detect_hallucination(output: LLMOutput) -> HallucinationEvaluation:
             max_output_tokens=output.settings.max_tokens,
             text_format=HallucinationEvaluation,
         )
+        if response.output_parsed is None:
+            return HallucinationEvaluation(
+                is_hallucination=False,
+                rationale="Parsing failed (None returned)",
+                delusion_percentage=0.0,
+                error="output_parsed was None",
+            )
         return response.output_parsed
     except Exception as e:
         print(f"Error detecting hallucinations: {e}. Returning default values.")

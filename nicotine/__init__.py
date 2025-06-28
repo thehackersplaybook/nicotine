@@ -6,6 +6,7 @@ from .system import (
     HallucinationEvaluation,
     detect_hallucination,
 )
+from .api import app, create_app
 
 __all__ = [
     "LLMInput",
@@ -13,4 +14,6 @@ __all__ = [
     "LLMSettings",
     "HallucinationEvaluation",
     "detect_hallucination",
+    "app",
+    "create_app",
 ]

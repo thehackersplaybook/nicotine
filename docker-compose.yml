@@ -1,0 +1,75 @@
+version: "3.8"
+
+services:
+  nicotine-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/.venv # Exclude virtual environment from volume
+    environment:
+      - PYTHONPATH=/app
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NICOTINE_CONFIG=./config/default.yaml
+    env_file:
+      - .env
+    command: uvicorn nicotine.api:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - nicotine-network
+
+  nicotine-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NICOTINE_CONFIG=./config/default.yaml
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - nicotine-network
+
+  # Test service for running integration tests
+  nicotine-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+      - OPENAI_API_KEY=test-key
+    command: pytest tests/test_api_integration.py -v
+    depends_on:
+      - nicotine-dev
+    networks:
+      - nicotine-network
+
+networks:
+  nicotine-network:
+    driver: bridge
+
+# Optional: Add volumes for persistent data
+volumes:
+  nicotine-data:

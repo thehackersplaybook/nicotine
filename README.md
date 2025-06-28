@@ -68,42 +68,127 @@ Every step mirrors a real-world water phase, blending cybermantic symbolism with
 
 ### Running as a FastAPI Service with Docker
 
-Nicotine can also be deployed as a REST API server using FastAPI and Docker.
+Nicotine can be deployed as a REST API server using FastAPI and Docker with comprehensive tooling for development and production.
 
-**To start the service:**
+#### Quick Start with Docker
+
+**Build and run using the provided scripts:**
 
 ```bash
-docker build -t nicotine-server .
-docker run -p 8000:8000 --env-file .env nicotine-server
+# Build the Docker image
+./scripts/cli/docker-build.sh
+
+# Run the service in development mode
+./scripts/cli/docker-run.sh -d
+
+# Or use docker-compose for development
+docker-compose up nicotine-dev
+
+# For production
+docker-compose up nicotine-prod
 ```
 
-**This will launch the Nicotine FastAPI server at** `http://localhost:8000`.
-
-#### Example: Basic Usage via HTTP
-
-- `POST /detect` — Submit an LLM output and get hallucination analysis.
-
-**Sample Request:**
+**Manual Docker commands:**
 
 ```bash
-curl -X POST http://localhost:8000/detect \
+# Development
+docker build --target development -t nicotine:dev .
+docker run -p 8000:8000 --env-file .env nicotine:dev
+
+# Production
+docker build --target production -t nicotine:latest .
+docker run -p 8000:8000 --env-file .env nicotine:latest
+```
+
+#### API Endpoints
+
+The FastAPI service provides the following endpoints:
+
+- `GET /` — Service health and information
+- `GET /health` — Health check endpoint
+- `POST /api/v1/detect-hallucination` — Analyze LLM output for hallucinations
+
+- `GET /docs` — Interactive API documentation (Swagger UI)
+- `GET /redoc` — Alternative API documentation (ReDoc)
+
+#### Example: API Usage
+
+**Health Check:**
+
+```bash
+curl http://localhost:8000/health
+```
+
+**Hallucination Detection:**
+
+```bash
+curl -X POST http://localhost:8000/api/v1/detect-hallucination \
      -H "Content-Type: application/json" \
-     -d '{"input": "Napoleon was 7 feet tall.", "references": ["Wikipedia", "Encyclopedia Britannica"]}'
+     -d '{
+       "id": "test-001",
+       "prompt": "What is the capital of France?",
+       "output": "The capital of France is Paris.",
+       "settings": {
+         "model": "gpt-4",
+         "temperature": 0.7,
+         "max_tokens": 1000
+       }
+     }'
 ```
 
 **Sample Response:**
 
 ```json
 {
-  "summary": "Potential hallucination detected: Height of Napoleon is factually inaccurate.",
-  "score": 0.92,
-  ...
+  "is_hallucination": false,
+  "rationale": "The response is factually correct",
+  "delusion_percentage": 0.0,
+  "error": null
 }
+```
+
+#### Docker Management
+
+Use the provided management script for easier container operations:
+
+```bash
+# Start container
+./scripts/cli/docker-manage.sh start
+
+# Stop container
+./scripts/cli/docker-manage.sh stop
+
+# View logs
+./scripts/cli/docker-manage.sh logs -f
+
+# Get container status
+./scripts/cli/docker-manage.sh status
+
+# Open shell in container
+./scripts/cli/docker-manage.sh shell
+
+# Clean up (stop and remove)
+./scripts/cli/docker-manage.sh clean
 ```
 
 ---
 
 ## 💻 Development
+
+### Quick Local Development
+
+**Start the FastAPI service locally without Docker:**
+
+```bash
+# Quick start (recommended)
+./scripts/start-dev.sh
+
+# Advanced start with options
+./scripts/cli/serve.sh --help
+
+# Manual start with FastAPI CLI
+fastapi dev nicotine/api.py
+```
 
 ### Environment Setup
 
@@ -128,7 +213,17 @@ curl -X POST http://localhost:8000/detect \
    NICOTINE_CONFIG=./config/default.yaml
    ```
 
-4. **Verify setup** (optional)
+4. **Start development server**
+
+   ```bash
+   # Quick start
+   ./scripts/start-dev.sh
+
+   # Or with options
+   ./scripts/cli/serve.sh -p 8080 --no-reload
+   ```
+
+5. **Verify setup** (optional)
 
    ```bash
    python scripts/verify_setup.py
@@ -149,18 +244,79 @@ Nicotine enforces the highest code quality and security standards:
 
 ## 🧪 Testing
 
+Nicotine includes comprehensive unit and integration tests for all components.
+
+### Running Tests
+
 - **Run all tests:**
 
   ```bash
   pytest
   ```
 
-- **Code Quality Checks:**
+- **Run unit tests only:**
+
+  ```bash
+  pytest tests/unit/
+  ```
+
+- **Run integration tests (API endpoints):**
+
+  ```bash
+  pytest tests/test_api_integration.py -v
+  ```
+
+- **Run tests with coverage:**
+  ```bash
+  pytest --cov=nicotine --cov-report=html
+  ```
+
+### Docker Testing
+
+- **Run tests in Docker:**
+
+  ```bash
+  docker-compose up nicotine-test
+  ```
+
+- **Run integration tests against running service:**
+
+  ```bash
+  # Start service
+  ./scripts/cli/docker-run.sh -d
+
+  # Run integration tests
+  pytest tests/test_api_integration.py -v
+
+  # Stop service
+  ./scripts/cli/docker-manage.sh stop
+  ```
+
+### Code Quality Checks
+
+- **Static Type Checking:**
 
   ```bash
   mypy nicotine/
+  ```
+
+- **Code Style and Linting:**
+
+  ```bash
   flake8 nicotine/
+  black --check nicotine/
+  isort --check-only nicotine/
+  ```
+
+- **Security Scanning:**
+
+  ```bash
   bandit -r nicotine/
+  ```
+
+- **Run all quality checks:**
+  ```bash
+  ./scripts/cli/validate.sh
   ```
 
 ---
